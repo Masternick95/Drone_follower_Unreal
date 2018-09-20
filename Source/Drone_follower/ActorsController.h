@@ -6,6 +6,8 @@
 #include "GameFramework/Actor.h"
 #include "UDP_Component.h"
 #include "CustomData.h"
+#include "Ball.h"
+#include "Drone_followerPawn.h"
 #include "ActorsController.generated.h"
 
 UCLASS()
@@ -24,12 +26,15 @@ public:
 
 	virtual void PreInitializeComponents() override;
 
-	void ReturnNewData(FCustomPoseData* NewData);
+	void ReturnNewData(FCustomPoseData* NewData, FString ClassName);
 
 private:
 
 	UPROPERTY(EditAnywhere, Category = "Remote Address")
 	class UUDP_Component* OurCommunicationComponent;
+    
+    ABall *Ball;
+    ADrone_followerPawn *Drone;
 	
 	FCustomPoseData ReceivedData;
 };

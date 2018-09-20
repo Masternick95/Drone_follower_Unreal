@@ -1,6 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
-
 #include "UDP_Component.h"
+#include <cstdio>
+#include <iostream>
+#include <string>
+
+#include "Runtime/Core/Public/HAL/PThreadCriticalSection.h"
 
 #include "Messages.h"
 #include "CustomData.h"
@@ -29,11 +33,11 @@ DestIP_Address(FString("127.0.0.1")), PortOut(9000)
 // Initialize the communication
 bool UUDP_Component::StartUDPComm(const FString& YourChosenSocketName)
 {
-	ScreenMsg("SOCKETS INIT");
-	ScreenMsg("Source IP = ", SourceIP_Address);
-	ScreenMsg("Source Port = ", PortIn);
-	ScreenMsg("Destination IP = ", DestIP_Address);
-	ScreenMsg("Destination Port = ", PortOut);
+	//ScreenMsg("SOCKETS INIT");
+	//ScreenMsg("Source IP = ", SourceIP_Address);
+	//ScreenMsg("Source Port = ", PortIn);
+	//ScreenMsg("Destination IP = ", DestIP_Address);
+	//ScreenMsg("Destination Port = ", PortOut);
 
 	FIPv4Address SourceAddr, DestAddr;
 
@@ -78,6 +82,12 @@ bool UUDP_Component::StartUDPComm(const FString& YourChosenSocketName)
 	UDPReceiver->OnDataReceived().BindUObject(this, &UUDP_Component::Recv);
 	ScreenMsg("Starting Listening Thread...");
 	UDPReceiver->Start();
+    
+    /*if(YourChosenSocketName.Equals("CameraCommunicationComponent")){
+        imgSocket = true;
+    }else{
+        imgSocket = false;
+    }*/
 
 	return true;
 }
@@ -95,18 +105,61 @@ bool UUDP_Component::StartUDPComm(const FString& YourChosenSocketName)
 */
 void UUDP_Component::Recv(const FArrayReaderPtr& ArrayReaderPtr, const FIPv4Endpoint& EndPt)
 {
-	//ScreenMsg("Received bytes", ArrayReaderPtr->Num());
-	//ArrayReaderPtr->Serialize(DataIn.GetData(), ArrayReaderPtr->Num());
-	*ArrayReaderPtr << DataIn;
+    /*if(imgSocket == true){
+        //Receives a string
+        ImgToSend = true;
+        GLog->Log("Image to send");
+        return;
+    }*/
+    
+    *ArrayReaderPtr << DataIn; // old code
+    
+    //GLog->Log("New data received");
+    
+    //newDataLock.Lock();
+    newData = true;
+    //newDataLock.Unlock();
+    
+    /*ScreenMsg("Received bytes", ArrayReaderPtr->Num());
+    //other methods
+    unsigned char* RawData = ArrayReaderPtr->GetData();
+    FString temp((char*)RawData);
+    TArray<uint8> RawData2(ArrayReaderPtr->GetData(), ArrayReaderPtr->Num());
+    
+    FString outString = BytesToString(ArrayReaderPtr->GetData(), ArrayReaderPtr->Num());
+    ScreenMsg("Received msg: " + outString);
+    
+    std::sscanf(TCHAR_TO_ANSI(*outString), "(%f, %f, %f), (%f, %f, %f), (%f, %f, %f)", &DataIn.drone_X, &DataIn.drone_Y, &DataIn.drone_Z, &DataIn.drone_Roll, &DataIn.drone_Pitch, &DataIn.drone_Yaw, &DataIn.ball_X, &DataIn.ball_Y, &DataIn.ball_Z);*/
+    FString debug;
+    debug = "[UDP]Received X: " + FString::SanitizeFloat(DataIn.drone_X) + " Y: " +  FString::SanitizeFloat(DataIn.drone_Y) + " Z: " +  FString::SanitizeFloat(DataIn.drone_Z);
+    //ScreenMsg("Received X: ", DataIn.ball_X);
+    //GLog->Log(debug);
 }
 
 /**
 * Return the retrieved data
 */
-void UUDP_Component::GetData(FCustomPoseData* RetData)
+FCustomPoseData UUDP_Component::GetData()
 {
-	*RetData = DataIn;
-	//ScreenMsg("Value", *((float*)(RetData->GetData()) + 3));
+	//*RetData = DataIn;
+    
+    return DataIn;
+}
+
+bool UUDP_Component::CheckForData(){
+    //newDataLock.Lock();
+    if(newData == true){
+        newData = false;
+        return true;
+    }else{
+        return false;
+    }
+    //newDataLock.Unlock();
+   /* if(newDataLock.TryLock() == true){
+        return true;
+    }else{
+        return false;
+    }*/
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -115,8 +168,13 @@ void UUDP_Component::GetData(FCustomPoseData* RetData)
 int UUDP_Component::SendData(TArray<uint8> Array)
 {
 	int32 byteSent = 0;
-
+	//ScreenMsg("GetData: ", Array.GetData());
+	//ScreenMsg("Num: ", Array.Num());
+	//ScreenMsg("Remote Addr: ", RemoteAddr.Get()->ToString(true));
+	
 	SendSocket->SendTo(Array.GetData(), Array.Num(), byteSent, *RemoteAddr);
+	
+	//ScreenMsg("SendData()");
 
 	return byteSent;
 }
@@ -130,6 +188,13 @@ int UUDP_Component::SendData(uint8* Data, int Nbytes)
 	return byteSent;
 }
 
+bool UUDP_Component::SendImg(){
+    return ImgToSend;
+}
+
+void UUDP_Component::ImgSent(){
+    ImgToSend = false;
+}
 
 ////////////////////////////////////////
 //			    ENDING

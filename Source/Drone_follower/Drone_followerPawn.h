@@ -5,7 +5,7 @@
 #include "GameFramework/Pawn.h"
 #include "CustomData.h"
 #include "UDP_Component.h"
-#include "ActorsController.h"
+//#include "ActorsController.h"
 //#include "MovComponent.h"
 #include "Drone_followerPawn.generated.h"
 
@@ -39,6 +39,8 @@ public:
 	// Position is in [cm]
 	// Rotation is in [degrees]
 	void GetPose(FRotator* Rotation, FVector* Position);
+    
+    void SetPose(FRotator Rotation, FVector Position);
 	
 protected:
 
@@ -65,8 +67,8 @@ private:
 	class USpringArmComponent* OnBoardSpringArm;
 	
 	// Communication Component
-	UPROPERTY(EditAnywhere, Category = "Remote Address")
-	class UUDP_Component* OurCommunicationComponent;
+	//UPROPERTY(EditAnywhere, Category = "Remote Address")
+	//class UUDP_Component* OurCommunicationComponent;
 	
 	// Movement Component to take 
 	//class UMovComponent* MovementComponent;
@@ -79,7 +81,7 @@ private:
 	FCustomPoseData VehiclePose;
 	FCustomImpactData VehicleImpact;
 
-	AActorsController* ActorController;
+	//AActorsController* ActorController;
 	
 	/** How quickly forward speed changes */
 	UPROPERTY(Category=Plane, EditAnywhere)

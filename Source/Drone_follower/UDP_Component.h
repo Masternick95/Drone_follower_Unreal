@@ -34,11 +34,16 @@ public:
 	void Recv(const FArrayReaderPtr& ArrayReaderPtr, const FIPv4Endpoint& EndPt);
 
 	// Retrieve Data
-	void GetData(FCustomPoseData* RetData);
+	//void GetData(FCustomPoseData* RetData);
+    FCustomPoseData GetData();
+    bool CheckForData();
 
 	// Send Data
 	int SendData(TArray<uint8> Array);
 	int SendData(uint8* Data, int Nbytes);
+    
+    bool SendImg();
+    void ImgSent();
 
 	/** Called whenever this actor is being removed from a level */
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
@@ -60,6 +65,14 @@ private:
 	// Received Data
 	//TArray<uint8> DataIn;
 	FCustomPoseData DataIn;
+    
+    bool ImgToSend;   //Flag for send img after receiving request
+    
+    FPThreadsCriticalSection newDataLock;   //Mutex for newData variable
+    
+    bool newData;   //Flag to signal new data received
+    
+    bool imgSocket;
 
 	// Output Data
 	TArray<uint8> DataOut;

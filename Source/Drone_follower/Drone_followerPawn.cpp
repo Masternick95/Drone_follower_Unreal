@@ -18,11 +18,12 @@
 ADrone_followerPawn::ADrone_followerPawn()
 {
 	Rotation = FRotator(0.0f, 0.0f, 0.0f);
-	Position = FVector(0.0f, -270.0f, 630.0f);
+	Position = FVector(-470.0f, -270.0f, 630.0f);
 	OldPosition = FVector(0, 0, 0);
 	
 	// Set this pawn to call Tick() every frame.
 	PrimaryActorTick.bCanEverTick = true;
+    SetActorTickEnabled(true);
 	
 	// Create the movement component for interacting with the environment
 	//MovementComponent = CreateDefaultSubobject<UMovComponent>(TEXT("MovementComponent"));
@@ -54,7 +55,7 @@ ADrone_followerPawn::ADrone_followerPawn()
 	
 	//Attach Spring Arm to root component
 	CameraSpringArm->SetupAttachment(RootComponent);
-	CameraSpringArm->SetRelativeLocation(FVector(-200.0f, 0.0f, 100.0f));
+	CameraSpringArm->SetRelativeLocation(FVector(-130.0f, 0.0f, 100.0f));
 	CameraSpringArm->SetRelativeRotation(FRotator(0.0f, 0.0f, 0.0f));
 	CameraSpringArm->TargetArmLength = 300.0f;
 	// Decouple the some rotationale movement of the Pawn from the movement of the camera
@@ -93,22 +94,23 @@ ADrone_followerPawn::ADrone_followerPawn()
 	CurrentForwardSpeed = 500.f;
 	
 	// Instantiate the communication component to send out images
-	OurCommunicationComponent = CreateDefaultSubobject<UUDP_Component>(TEXT("PawnCommuncationComponent"));
+	//OurCommunicationComponent = CreateDefaultSubobject<UUDP_Component>(TEXT("PawnCommuncationComponent"));
 
 	//Get ActorsController pointer for receiving position
-	for (TObjectIterator<AActorsController> Itr; Itr; ++Itr) {
+	/*for (TObjectIterator<AActorsController> Itr; Itr; ++Itr) {
 		if (Itr->IsA(AActorsController::StaticClass())) {
 			ActorController = *Itr;
 		}
-	}
+	}*/
 }
 
 //Start communication component
 void ADrone_followerPawn::PreInitializeComponents()
 {
 	Super::PreInitializeComponents();
-	ScreenMsg("Starting UDP Component");
-	OurCommunicationComponent->StartUDPComm("PawnCommunicationComponent");
+	//ScreenMsg("Starting UDP Component");
+	//OurCommunicationComponent->StartUDPComm("PawnCommunicationComponent");
+	CaptureCamera->InitCommunication();
 }
 
 // Called when the game starts or when spawned
@@ -118,7 +120,7 @@ void ADrone_followerPawn::BeginPlay()
 
 	if (GEngine)
 	{
-		ScreenMsg("Drone Pawn Spawned");
+		//ScreenMsg("Drone Pawn Spawned");
 	}
 }
 
@@ -134,16 +136,16 @@ void ADrone_followerPawn::Tick(float DeltaSeconds)
 	// Call any parent class Tick implementation
 	Super::Tick(DeltaSeconds);
 	
-	GetPose(&Rotation, &Position);
+	//GetPose(&Rotation, &Position);
 	
-	DeltaMovement = Position - OldPosition;
+	//DeltaMovement = Position - OldPosition;
 	
 	//Acquire image from camera and send through UDP
 	CaptureCamera->CaptureMyScene();
 	
 	counter++;
 	
-	OldPosition = Position;
+	//OldPosition = Position;
 }
 
 void ADrone_followerPawn::NotifyHit(class UPrimitiveComponent* MyComp, class AActor* Other, class UPrimitiveComponent* OtherComp, bool bSelfMoved, FVector HitLocation, FVector HitNormal, FVector NormalImpulse, const FHitResult& Hit)
@@ -187,7 +189,7 @@ void ADrone_followerPawn::GetPose(FRotator* Att, FVector* Pos)
 
 	FCustomPoseData RecvdData;
 
-	ActorController->ReturnNewData(&RecvdData);
+	//ActorController->ReturnNewData(&RecvdData, "ADRONE");
 
 	// Take the measures in Radiants and convert them into degree 
 	Att->Roll = RecvdData.drone_Roll * 180 / PI;
@@ -199,6 +201,7 @@ void ADrone_followerPawn::GetPose(FRotator* Att, FVector* Pos)
 	Pos->Y = 100 * RecvdData.drone_Y;
 	Pos->Z = -100 * RecvdData.drone_Z;
 
+    //ScreenMsg("X: ",RecvdData.ball_X);
 	/*
 	Rotation->Roll = 0;
 	Rotation->Pitch = 0;
@@ -208,6 +211,14 @@ void ADrone_followerPawn::GetPose(FRotator* Att, FVector* Pos)
 	Position->Y = 1200;
 	Position->Z = 500;
 	*/
+}
+
+void ADrone_followerPawn::SetPose(FRotator Rotation, FVector Position){
+    
+    SetActorLocationAndRotation(Position, Rotation, false, 0, ETeleportType::TeleportPhysics);
+    
+    //SetActorLocation(Position);
+    //SetActorRelativeRotation(Rotation.Quaternion());
 }
 
 void ADrone_followerPawn::ThrustInput(float Val)

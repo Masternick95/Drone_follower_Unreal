@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "ActorsController.h"
+//#include "ActorsController.h"
 #include "UDP_Component.h"
 #include "Ball.generated.h"
 
@@ -25,7 +25,8 @@ public:
 
 	//Set the pose from the Data received and return into the corresponding vectors
 	//Position is in cm
-	void SetPose(FCustomPoseData* ReceivedData);
+	//void SetPose(FCustomPoseData* ReceivedData);
+    void SetPose(FVector Position);
 	
 private:
 
@@ -33,5 +34,5 @@ private:
 		USceneComponent* BallVisibleComponent;
 
 	//ActorsController pointer
-	AActorsController* ActorController;
+	//AActorsController* ActorController;
 };
